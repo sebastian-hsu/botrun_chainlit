@@ -37,6 +37,12 @@ const TagsInput = ({
         id: id,
         name: id
       }}
+      onPointerEnterCapture={() => {
+        // console.log('onPointerEnterCapture');
+      }}
+      onPointerLeaveCapture={() => {
+        // console.log('onPointerLeaveCapture');
+      }}
     />
   </InputStateHandler>
 );
