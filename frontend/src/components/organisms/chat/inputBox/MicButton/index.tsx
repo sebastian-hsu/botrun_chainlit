@@ -24,6 +24,7 @@ const MicButton = ({ disabled }: Props) => {
   const { config } = useConfig();
   const {
     startRecording: _startRecording,
+    stopRecording,  // 確保從 useAudio 中解構這個函數
     isRecording,
     isSpeaking,
     isRecordingFinished,
@@ -63,7 +64,11 @@ const MicButton = ({ disabled }: Props) => {
 
   return (
     <>
-      <RecordScreen open={isRecording} isSpeaking={isSpeaking} />
+      <RecordScreen 
+        open={isRecording} 
+        isSpeaking={isSpeaking} 
+        onStopRecording={stopRecording}  // 傳遞 stopRecording 函數
+      />
       <Tooltip
         title={
           <Translator

@@ -8,13 +8,15 @@ import MicrophoneIcon from 'assets/microphone';
 interface Props {
   open?: boolean;
   isSpeaking?: boolean;
+  onStopRecording: () => void;  // 新增這個 prop
 }
 
-export default function RecordScreen({ open, isSpeaking }: Props) {
+export default function RecordScreen({ open, isSpeaking, onStopRecording }: Props) {
   return (
     <Backdrop
       sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
       open={!!open}
+      onClick={onStopRecording}  // 添加點擊事件
     >
       <Box
         height={300}
