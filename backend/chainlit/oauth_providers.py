@@ -16,6 +16,7 @@ class OAuthProvider:
     client_secret: str
     authorize_url: str
     authorize_params: Dict[str, str]
+    default_prompt: Optional[str] = None
 
     def is_configured(self):
         return all([os.environ.get(env) for env in self.env])
@@ -25,6 +26,21 @@ class OAuthProvider:
 
     async def get_user_info(self, token: str) -> Tuple[Dict[str, str], User]:
         raise NotImplementedError()
+
+    def get_env_prefix(self) -> str:
+        """Return environment prefix, like AZURE_AD."""
+
+        return self.id.replace("-", "_").upper()
+
+    def get_prompt(self) -> Optional[str]:
+        """Return OAuth prompt param."""
+        if prompt := os.environ.get(f"OAUTH_{self.get_env_prefix()}_PROMPT"):
+            return prompt
+
+        if prompt := os.environ.get("OAUTH_PROMPT"):
+            return prompt
+
+        return self.default_prompt
 
 
 class GithubOAuthProvider(OAuthProvider):
@@ -38,6 +54,9 @@ class GithubOAuthProvider(OAuthProvider):
         self.authorize_params = {
             "scope": "user:email",
         }
+
+        if prompt := self.get_prompt():
+            self.authorize_params["prompt"] = prompt
 
     async def get_token(self, code: str, url: str):
         payload = {
@@ -96,6 +115,9 @@ class GoogleOAuthProvider(OAuthProvider):
             "response_type": "code",
             "access_type": "offline",
         }
+
+        if prompt := self.get_prompt():
+            self.authorize_params["prompt"] = prompt
 
     async def get_token(self, code: str, url: str):
         payload = {
@@ -164,6 +186,9 @@ class AzureADOAuthProvider(OAuthProvider):
             "response_mode": "query",
         }
 
+        if prompt := self.get_prompt():
+            self.authorize_params["prompt"] = prompt
+
     async def get_token(self, code: str, url: str):
         payload = {
             "client_id": self.client_id,
@@ -207,7 +232,7 @@ class AzureADOAuthProvider(OAuthProvider):
                 azure_user["image"] = (
                     f"data:{photo_response.headers['Content-Type']};base64,{base64_image.decode('utf-8')}"
                 )
-            except Exception as e:
+            except Exception:
                 # Ignore errors getting the photo
                 pass
 
@@ -248,6 +273,9 @@ class AzureADHybridOAuthProvider(OAuthProvider):
             "nonce": nonce,
         }
 
+        if prompt := self.get_prompt():
+            self.authorize_params["prompt"] = prompt
+
     async def get_token(self, code: str, url: str):
         payload = {
             "client_id": self.client_id,
@@ -291,7 +319,7 @@ class AzureADHybridOAuthProvider(OAuthProvider):
                 azure_user["image"] = (
                     f"data:{photo_response.headers['Content-Type']};base64,{base64_image.decode('utf-8')}"
                 )
-            except Exception as e:
+            except Exception:
                 # Ignore errors getting the photo
                 pass
 
@@ -326,6 +354,9 @@ class OktaOAuthProvider(OAuthProvider):
             "scope": "openid profile email",
             "response_mode": "query",
         }
+
+        if prompt := self.get_prompt():
+            self.authorize_params["prompt"] = prompt
 
     def get_authorization_server_path(self):
         if not self.authorization_server_id:
@@ -398,6 +429,9 @@ class Auth0OAuthProvider(OAuthProvider):
             "audience": f"{self.original_domain}/userinfo",
         }
 
+        if prompt := self.get_prompt():
+            self.authorize_params["prompt"] = prompt
+
     async def get_token(self, code: str, url: str):
         payload = {
             "client_id": self.client_id,
@@ -442,7 +476,7 @@ class DescopeOAuthProvider(OAuthProvider):
     id = "descope"
     env = ["OAUTH_DESCOPE_CLIENT_ID", "OAUTH_DESCOPE_CLIENT_SECRET"]
     # Ensure that the domain does not have a trailing slash
-    domain = f"https://api.descope.com/oauth2/v1"
+    domain = "https://api.descope.com/oauth2/v1"
 
     authorize_url = f"{domain}/authorize"
 
@@ -454,6 +488,9 @@ class DescopeOAuthProvider(OAuthProvider):
             "scope": "openid profile email",
             "audience": f"{self.domain}/userinfo",
         }
+
+        if prompt := self.get_prompt():
+            self.authorize_params["prompt"] = prompt
 
     async def get_token(self, code: str, url: str):
         payload = {
@@ -512,6 +549,9 @@ class AWSCognitoOAuthProvider(OAuthProvider):
             "client_id": self.client_id,
             "scope": "openid profile email",
         }
+
+        if prompt := self.get_prompt():
+            self.authorize_params["prompt"] = prompt
 
     async def get_token(self, code: str, url: str):
         payload = {
@@ -580,6 +620,9 @@ class GitlabOAuthProvider(OAuthProvider):
             "scope": "openid profile email",
             "response_type": "code",
         }
+
+        if prompt := self.get_prompt():
+            self.authorize_params["prompt"] = prompt
 
     async def get_token(self, code: str, url: str):
         payload = {

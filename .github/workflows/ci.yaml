@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  workflow_call:
+  workflow_dispatch:
+  pull_request:
+    branches: [main, dev]
+  push:
+    branches: [main, dev]
+
+permissions: read-all
+
+jobs:
+  pytest:
+    uses: ./.github/workflows/pytest.yaml
+    secrets: inherit
+  mypy:
+    uses: ./.github/workflows/mypy.yaml
+    secrets: inherit
+  e2e-tests:
+    uses: ./.github/workflows/e2e-tests.yaml
+    secrets: inherit
+  ci:
+    runs-on: ubuntu-latest
+    name: Run CI
+    needs: [mypy, pytest, e2e-tests]
+    steps:
+      - name: Done
+        run: echo "Done"
